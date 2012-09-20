@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/howeyc/fsnotify"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -13,17 +12,20 @@ import (
 func main() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
 	err = watcher.Watch(wd)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
 	defer watcher.Close()
@@ -32,30 +34,32 @@ func main() {
 		select {
 		case ev := <-watcher.Event:
 			if strings.HasSuffix(ev.Name, ".go") {
+				fmt.Println("Running tests...")
+
 				cmd := exec.Command("go", "test")
 				stdout, err := cmd.StdoutPipe()
 				if err != nil {
-					log.Println(err)
+					fmt.Println(err)
 					break
 				}
 
 				err = cmd.Start()
 				if err != nil {
-					log.Println(err)
+					fmt.Println(err)
 					break
 				}
 
 				go io.Copy(os.Stdout, stdout)
 				err = cmd.Wait()
 				if err != nil {
-					log.Println(err)
+					fmt.Println(err)
 				}
 
 				fmt.Println()
 			}
 
 		case err := <-watcher.Error:
-			log.Println(err)
+			fmt.Println(err)
 		}
 	}
 
