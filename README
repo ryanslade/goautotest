@@ -1,0 +1,2 @@
+Simple tool to automatically run "go test" when a change is made to .go file
+
