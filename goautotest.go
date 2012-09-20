@@ -36,7 +36,9 @@ func main() {
 			if strings.HasSuffix(ev.Name, ".go") {
 				fmt.Println("Running tests...")
 
-				cmd := exec.Command("go", "test")
+				args := append([]string{"test"}, os.Args[1:]...)
+				cmd := exec.Command("go", args...)
+
 				stdout, err := cmd.StdoutPipe()
 				if err != nil {
 					fmt.Println(err)
