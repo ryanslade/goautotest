@@ -22,6 +22,12 @@ func startGoTest() {
 		os.Exit(1)
 	}
 
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	err = cmd.Start()
 	if err != nil {
 		fmt.Println(err)
@@ -29,6 +35,8 @@ func startGoTest() {
 	}
 
 	go io.Copy(os.Stdout, stdout)
+	go io.Copy(os.Stderr, stderr)
+
 	err = cmd.Wait()
 	if err != nil {
 		fmt.Println(err)
