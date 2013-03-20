@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/howeyc/fsnotify"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -15,28 +14,14 @@ func startGoTest() {
 
 	args := append([]string{"test"}, os.Args[1:]...)
 	cmd := exec.Command("go", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	stdout, err := cmd.StdoutPipe()
+	err := cmd.Start()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	err = cmd.Start()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	go io.Copy(os.Stdout, stdout)
-	go io.Copy(os.Stderr, stderr)
-
 	err = cmd.Wait()
 	if err != nil {
 		fmt.Println(err)
@@ -49,19 +34,19 @@ func main() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 
 	err = watcher.Watch(wd)
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 
 	defer watcher.Close()
