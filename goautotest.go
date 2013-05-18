@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func startGoTest() {
+func startGoTest(doneChan chan bool) {
 	fmt.Println("Running tests...")
 
 	args := append([]string{"test"}, os.Args[1:]...)
@@ -28,6 +28,7 @@ func startGoTest() {
 	}
 
 	fmt.Println()
+	doneChan <- true
 }
 
 func main() {
@@ -51,19 +52,24 @@ func main() {
 
 	defer watcher.Close()
 
-	burstGuard := make(<-chan time.Time)
+	ignore := false
+	doneChan := make(chan bool)
+
 	for {
 		select {
 		case ev := <-watcher.Event:
-			if strings.HasSuffix(ev.Name, ".go") {
-				burstGuard = time.After(500 * time.Millisecond)
+			if strings.HasSuffix(ev.Name, ".go") && !ignore {
+				ignore = true
+				go startGoTest(doneChan)
 			}
 
 		case err := <-watcher.Error:
 			fmt.Println(err)
 
-		case <-burstGuard:
-			startGoTest()
+		case <-doneChan:
+			time.AfterFunc(1500*time.Millisecond, func() {
+				ignore = false
+			})
 		}
 	}
 
