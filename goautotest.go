@@ -54,6 +54,7 @@ func main() {
 
 	ignore := false
 	doneChan := make(chan bool)
+	readyChan := make(chan bool)
 
 	for {
 		select {
@@ -68,8 +69,11 @@ func main() {
 
 		case <-doneChan:
 			time.AfterFunc(1500*time.Millisecond, func() {
-				ignore = false
+				readyChan <- true
 			})
+
+		case <-readyChan:
+			ignore = false
 		}
 	}
 
