@@ -1,8 +1,8 @@
 Simple tool to automatically run "go test" when a change is made to .go files.
 
 INSTALL
-go get github.com/ryanslade/goautotest
-go install github.com/ryanslade/goautotest
+    go get github.com/ryanslade/goautotest
+
 
 TO RUN
 Run "goautotest" in the directory of your project
