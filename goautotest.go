@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/howeyc/fsnotify"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/howeyc/fsnotify"
 )
 
 func startGoTest(doneChan chan bool) {
@@ -44,7 +46,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = watcher.Watch(wd)
+	err = filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			err = watcher.Watch(path)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
