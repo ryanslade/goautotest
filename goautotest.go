@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/howeyc/fsnotify"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
+
+	"github.com/howeyc/fsnotify"
 )
 
 func startGoTest(doneChan chan bool) {
@@ -52,15 +52,17 @@ func main() {
 
 	defer watcher.Close()
 
-	ignore := false
+	running := false
 	doneChan := make(chan bool)
-	readyChan := make(chan bool)
 
 	for {
 		select {
 		case ev := <-watcher.Event:
-			if strings.HasSuffix(ev.Name, ".go") && !ignore {
-				ignore = true
+			if running {
+				continue
+			}
+			if strings.HasSuffix(ev.Name, ".go") {
+				running = true
 				go startGoTest(doneChan)
 			}
 
@@ -68,12 +70,7 @@ func main() {
 			fmt.Println(err)
 
 		case <-doneChan:
-			time.AfterFunc(1500*time.Millisecond, func() {
-				readyChan <- true
-			})
-
-		case <-readyChan:
-			ignore = false
+			running = false
 		}
 	}
 
