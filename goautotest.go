@@ -38,7 +38,7 @@ func main() {
 			}
 			if strings.HasSuffix(ev.Name, ".go") {
 				running = true
-				go startGoTest(doneChan)
+				go test(doneChan)
 			}
 
 		case err := <-watcher.Error:
@@ -50,7 +50,7 @@ func main() {
 	}
 }
 
-func startGoTest(doneChan chan bool) {
+func test(doneChan chan bool) {
 	fmt.Println("Running tests...")
 
 	cmd := exec.Command("go", args...)
