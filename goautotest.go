@@ -17,14 +17,8 @@ func startGoTest(doneChan chan bool) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Start()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	err = cmd.Wait()
-	if err != nil {
-		fmt.Println(err)
+	if err := cmd.Run(); err != nil {
+		fail(err)
 	}
 
 	fmt.Println()
@@ -34,22 +28,17 @@ func startGoTest(doneChan chan bool) {
 func main() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fail(err)
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fail(err)
 	}
 
-	err = watcher.Watch(wd)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if err := watcher.Watch(wd); err != nil {
+		fail(err)
 	}
-
 	defer watcher.Close()
 
 	running := false
@@ -73,5 +62,9 @@ func main() {
 			running = false
 		}
 	}
+}
 
+func fail(err error) {
+	fmt.Println(err)
+	os.Exit(1)
 }
