@@ -9,47 +9,22 @@ import (
 	"github.com/howeyc/fsnotify"
 )
 
-func startGoTest(doneChan chan bool) {
-	fmt.Println("Running tests...")
-
-	args := append([]string{"test"}, os.Args[1:]...)
-	cmd := exec.Command("go", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Start()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	err = cmd.Wait()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println()
-	doneChan <- true
-}
+var args = append([]string{"test"}, os.Args[1:]...)
 
 func main() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fail(err)
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fail(err)
 	}
 
-	err = watcher.Watch(wd)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if err := watcher.Watch(wd); err != nil {
+		fail(err)
 	}
-
 	defer watcher.Close()
 
 	running := false
@@ -63,7 +38,7 @@ func main() {
 			}
 			if strings.HasSuffix(ev.Name, ".go") {
 				running = true
-				go startGoTest(doneChan)
+				go test(doneChan)
 			}
 
 		case err := <-watcher.Error:
@@ -73,5 +48,24 @@ func main() {
 			running = false
 		}
 	}
+}
 
+func test(doneChan chan bool) {
+	fmt.Println("Running tests...")
+
+	cmd := exec.Command("go", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		fail(err)
+	}
+
+	fmt.Println()
+	doneChan <- true
+}
+
+func fail(err error) {
+	fmt.Println(err)
+	os.Exit(1)
 }
