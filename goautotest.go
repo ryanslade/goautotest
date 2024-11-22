@@ -9,21 +9,7 @@ import (
 	"github.com/howeyc/fsnotify"
 )
 
-func startGoTest(doneChan chan bool) {
-	fmt.Println("Running tests...")
-
-	args := append([]string{"test"}, os.Args[1:]...)
-	cmd := exec.Command("go", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		fail(err)
-	}
-
-	fmt.Println()
-	doneChan <- true
-}
+var args = append([]string{"test"}, os.Args[1:]...)
 
 func main() {
 	watcher, err := fsnotify.NewWatcher()
@@ -62,6 +48,21 @@ func main() {
 			running = false
 		}
 	}
+}
+
+func startGoTest(doneChan chan bool) {
+	fmt.Println("Running tests...")
+
+	cmd := exec.Command("go", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		fail(err)
+	}
+
+	fmt.Println()
+	doneChan <- true
 }
 
 func fail(err error) {
